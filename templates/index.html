@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept Chef — Education Simplifier</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 200ms; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Timestamp Link Styling */
+    .timestamp-link {
+        color: #2563eb; 
+        cursor: pointer; 
+        font-weight: 600; 
+        text-decoration: underline;
+        background-color: #eff6ff;
+        padding: 0px 4px;
+        border-radius: 4px;
+    }
+    .timestamp-link:hover { background-color: #dbeafe; color: #1d4ed8; }
+  </style>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'Inter', flowchart: { curve: 'basis' } });
+    window.renderMermaid = async (graphDefinition) => {
+      const element = document.querySelector('#mermaid-graph');
+      element.innerHTML = ''; 
+      try {
+          const { svg } = await mermaid.render('graphDiv', graphDefinition);
+          element.innerHTML = svg;
+          const svgEl = element.querySelector('svg');
+          if(svgEl) { svgEl.style.maxWidth = '100%'; svgEl.style.height = 'auto'; }
+      } catch (error) { element.innerHTML = '<div class="text-red-400 text-xs">Failed to render graph.</div>'; }
+    };
+  </script>
+</head>
+<body class="bg-[#F3F4F6] text-gray-800 h-screen flex overflow-hidden">
+
+  <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-20 hidden md:flex">
+    <div class="p-6 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white"><i class="fa-solid fa-brain"></i></div>
+        <div><h1 class="text-lg font-bold text-gray-900 tracking-tight">Concept Chef</h1></div>
+      </div>
+    </div>
+    <nav class="flex-1 p-4 space-y-1">
+      <button onclick="showSection('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl bg-blue-50 text-blue-700 transition-all">
+        <i class="fa-solid fa-rocket w-5"></i> Dashboard
+      </button>
+      <button onclick="showSection('mix')" id="nav-mix" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all">
+        <i class="fa-solid fa-layer-group w-5"></i> The Mix
+      </button>
+      <button onclick="showSection('map')" id="nav-map" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all">
+        <i class="fa-solid fa-project-diagram w-5"></i> Mind Map
+      </button>
+      <button onclick="showSection('quiz')" id="nav-quiz" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all">
+        <i class="fa-solid fa-gamepad w-5"></i> Quiz Arena
+      </button>
+    </nav>
+    <div class="p-4 border-t border-gray-100">
+        <button onclick="exportNotes()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 rounded-xl hover:bg-gray-100 transition-all">
+            <i class="fa-solid fa-download w-5"></i> Export Notes (MD)
+        </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto relative scroll-smooth">
+    
+    <section id="section-dashboard" class="max-w-4xl mx-auto p-8 pt-12">
+      <div class="text-center mb-10 space-y-3">
+        <h2 class="text-4xl font-extrabold text-gray-900">Turn Confusion into <span class="text-blue-600">Clarity.</span></h2>
+        <p class="text-lg text-gray-500">Upload content, customize your options, and let AI cook.</p>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-2 overflow-hidden border border-white">
+        <div class="bg-gray-100 p-1.5 rounded-2xl flex relative mb-6 mx-6 mt-6">
+          <button id="tab-youtube" class="flex-1 py-2.5 text-sm font-semibold rounded-xl shadow-sm bg-white text-blue-700 transition-all flex justify-center items-center gap-2"><i class="fa-brands fa-youtube text-red-500"></i> YouTube</button>
+          <button id="tab-pdf" class="flex-1 py-2.5 text-sm font-semibold rounded-xl text-gray-500 hover:text-gray-700 transition-all flex justify-center items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Upload PDF</button>
+        </div>
+
+        <div class="px-8 pb-8">
+          <form id="form-youtube" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">YouTube Link</label>
+              <div class="relative"><i class="fa-solid fa-link absolute left-4 top-3.5 text-gray-400"></i><input id="youtube-url" type="url" placeholder="Paste YouTube link here..." class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required /></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Persona</label><select id="persona-select-yt" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option>Explain like I'm 5</option><option>Marvel Universe</option><option>Hardcore Gamer</option><option>Gen-Z Slang</option><option>Corporate Speak</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Questions (1-100)</label><input id="qcount-yt" type="number" min="1" max="100" value="5" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Difficulty</label><select id="diff-yt" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option value="Mix">Mix</option><option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option></select></div>
+            </div>
+            <button id="btn-cook-yt" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-600/30 transition-all transform active:scale-[0.98]">Cook Concepts <i class="fa-solid fa-wand-magic-sparkles ml-2"></i></button>
+          </form>
+
+          <form id="form-pdf" class="space-y-6 hidden" enctype="multipart/form-data">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Document</label>
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-all cursor-pointer relative">
+                <input id="pdf-file" type="file" accept="application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required />
+                <div class="space-y-2 pointer-events-none"><i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-500"></i><p class="text-sm text-gray-600 font-medium">Click to upload PDF</p></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Persona</label><select id="persona-select-pdf" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option>Explain like I'm 5</option><option>Marvel Universe</option><option>Hardcore Gamer</option><option>Gen-Z Slang</option><option>Corporate Speak</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Questions (1-100)</label><input id="qcount-pdf" type="number" min="1" max="100" value="5" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Difficulty</label><select id="diff-pdf" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none"><option value="Mix">Mix</option><option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option></select></div>
+            </div>
+            <button id="btn-cook-pdf" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-600/30 transition-all transform active:scale-[0.98]">Cook Concepts <i class="fa-solid fa-wand-magic-sparkles ml-2"></i></button>
+          </form>
+
+          <div id="loader" class="hidden mt-6 text-center py-4">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-100 border-t-blue-600 mb-3"></div>
+              <p class="text-blue-600 font-medium animate-pulse">Analyzing content...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-mix" class="p-8 hidden h-full">
+        <div class="flex items-center mb-6">
+            <button onclick="showSection('dashboard')" class="text-gray-400 hover:text-gray-600 mr-4 transition"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <h2 class="text-2xl font-bold text-gray-800">The Mix</h2>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] overflow-hidden">
+            <div class="lg:col-span-7 flex flex-col space-y-6 overflow-y-auto pr-2 pb-24 scroll-smooth">
+                <div class="bg-black rounded-2xl overflow-hidden shadow-lg aspect-video flex-shrink-0 relative">
+                    <div id="player-wrapper" class="w-full h-full">
+                        <div id="media-container" class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-list-ul text-blue-500"></i> Quick Summary</h3><button onclick="speakSummary()" class="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition"><i class="fa-solid fa-volume-high mr-1"></i> Listen</button></div>
+                    <ul id="summary-list" class="space-y-3 text-gray-600 leading-relaxed"></ul>
+                </div>
+            </div>
+            <div class="lg:col-span-5 flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="p-6 border-b border-gray-100 bg-gray-50/50"><h3 class="text-lg font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-purple-500"></i> <span id="analogy-title">AI Explanation</span></h3></div>
+                <div class="p-6 overflow-y-auto flex-1"><div id="analogy-content" class="prose prose-blue text-gray-600 leading-relaxed"></div></div>
+                <div class="p-4 border-t border-gray-100 bg-gray-50"><button onclick="showSection('map')" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">View Mind Map <i class="fa-solid fa-project-diagram ml-2"></i></button></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="section-map" class="p-8 hidden h-full flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center"><button onclick="showSection('mix')" class="text-gray-400 hover:text-gray-600 mr-4 transition"><i class="fa-solid fa-arrow-left"></i> Back</button><h2 class="text-2xl font-bold text-gray-800">Visual Mind Map</h2></div>
+            <button onclick="showSection('quiz')" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-medium shadow-md hover:bg-blue-700 transition">Take Quiz <i class="fa-solid fa-arrow-right ml-2"></i></button>
+        </div>
+        <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 overflow-auto flex justify-center items-start"><div id="mermaid-graph" class="w-full flex justify-center transform transition-transform duration-300"></div></div>
+    </section>
+
+    <section id="section-quiz" class="max-w-3xl mx-auto p-8 pt-10 hidden pb-32">
+      <div class="text-center mb-8 relative">
+        <button onclick="showSection('map')" class="absolute left-0 top-1 text-gray-400 hover:text-gray-600 transition text-sm"><i class="fa-solid fa-arrow-left"></i> Review Map</button>
+        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">Knowledge Check</span>
+        <h2 class="text-3xl font-bold text-gray-900 mt-3">Quiz Arena</h2>
+      </div>
+      <div id="quiz-container" class="space-y-8 pb-10"></div>
+    </section>
+  </main>
+
+  <div class="fixed bottom-6 right-6 z-50">
+      <button onclick="toggleChat()" id="chat-btn" class="hidden w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl transition-transform hover:scale-105"><i class="fa-solid fa-comment-dots"></i></button>
+      <div id="chat-window" class="hidden w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col mb-4 overflow-hidden transition-all origin-bottom-right transform scale-95 opacity-0" style="height: 500px;">
+          <div class="bg-blue-600 p-4 flex justify-between items-center text-white"><h3 class="font-bold flex items-center gap-2"><i class="fa-solid fa-robot"></i> Tutor Chat</h3><button onclick="toggleChat()" class="hover:text-gray-200"><i class="fa-solid fa-xmark"></i></button></div>
+          <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+              <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-100 self-start text-gray-700">Hi! I've analyzed the content. Ask me any doubts!</div>
+          </div>
+          <div class="p-3 bg-white border-t border-gray-100">
+              <form id="chat-form" class="flex gap-2">
+                  <button type="button" id="mic-btn" onclick="startDictation()" class="text-gray-400 hover:text-red-500 px-2 transition"><i class="fa-solid fa-microphone"></i></button>
+                  <input id="chat-input" type="text" placeholder="Type or speak..." class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                  <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"><i class="fa-solid fa-paper-plane"></i></button>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    let currentSessionId = null;
+    let summaryTextForAudio = "";
+    let ytPlayer = null; 
+    let isYoutubeSource = false;
+
+    // --- 1. Load YouTube IFrame API ---
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+        // API ready, player will be created in populateMix
+    }
+
+    // --- 2. Global Seek Function ---
+    window.seekToVideo = function(seconds) {
+        if(ytPlayer && isYoutubeSource && typeof ytPlayer.seekTo === 'function') {
+            ytPlayer.seekTo(seconds, true);
+        } else {
+            console.log("Player not ready or not YouTube.");
+        }
+    }
+
+    // --- 3. Navigation (Existing) ---
+    const sections = ['dashboard', 'mix', 'map', 'quiz'];
+    function showSection(targetId) {
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const isTarget = btn.id === `nav-${targetId}`;
+        if (isTarget) { btn.classList.remove('text-gray-600', 'hover:bg-gray-50'); btn.classList.add('bg-blue-50', 'text-blue-700'); }
+        else { btn.classList.add('text-gray-600', 'hover:bg-gray-50'); btn.classList.remove('bg-blue-50', 'text-blue-700'); }
+      });
+      sections.forEach(id => {
+        const el = document.getElementById(`section-${id}`);
+        if (id === targetId) { el.classList.remove('hidden'); el.classList.add('animate-fade-in'); }
+        else { el.classList.add('hidden'); el.classList.remove('animate-fade-in'); }
+      });
+    }
+
+    // --- Tab Switching (Existing) ---
+    const tabYT = document.getElementById('tab-youtube');
+    const tabPDF = document.getElementById('tab-pdf');
+    const formYT = document.getElementById('form-youtube');
+    const formPDF = document.getElementById('form-pdf');
+    tabYT.addEventListener('click', () => { tabYT.classList.add('bg-white', 'shadow-sm', 'text-blue-700'); tabYT.classList.remove('text-gray-500'); tabPDF.classList.remove('bg-white', 'shadow-sm', 'text-blue-700'); tabPDF.classList.add('text-gray-500'); formYT.classList.remove('hidden'); formPDF.classList.add('hidden'); });
+    tabPDF.addEventListener('click', () => { tabPDF.classList.add('bg-white', 'shadow-sm', 'text-blue-700'); tabPDF.classList.remove('text-gray-500'); tabYT.classList.remove('bg-white', 'shadow-sm', 'text-blue-700'); tabYT.classList.add('text-gray-500'); formPDF.classList.remove('hidden'); formYT.classList.add('hidden'); });
+
+    // --- Form Submission (Existing) ---
+    const loader = document.getElementById('loader');
+    function toggleLoading(isLoading, isYouTube) {
+        const btn = isYouTube ? document.getElementById('btn-cook-yt') : document.getElementById('btn-cook-pdf');
+        if (isLoading) { btn.classList.add('hidden'); loader.classList.remove('hidden'); }
+        else { btn.classList.remove('hidden'); loader.classList.add('hidden'); }
+    }
+
+    async function handleFormSubmit(e, isYouTube) {
+        e.preventDefault();
+        toggleLoading(true, isYouTube);
+        const formData = new FormData();
+        const suffix = isYouTube ? '-yt' : '-pdf';
+        formData.append('style', document.getElementById('persona-select' + suffix).value);
+        formData.append('q_count', document.getElementById('qcount' + suffix).value);
+        formData.append('difficulty', document.getElementById('diff' + suffix).value);
+
+        if (isYouTube) {
+            formData.append('source_type', 'youtube');
+            formData.append('url', document.getElementById('youtube-url').value.trim());
+        } else {
+            formData.append('source_type', 'pdf');
+            const fileInput = document.getElementById('pdf-file');
+            if (fileInput.files.length === 0) { alert("Please select a file"); toggleLoading(false, isYouTube); return; }
+            formData.append('file', fileInput.files[0]);
+        }
+
+        try {
+            const response = await fetch('/generate', { method: 'POST', body: formData });
+            const result = await response.json();
+            if (result.status === 'success') {
+                currentSessionId = result.session_id;
+                populateMix(result.data, result.video_id);
+                document.getElementById('chat-btn').classList.remove('hidden');
+                showSection('mix');
+            } else { alert(result.message || 'Something went wrong.'); }
+        } catch (error) { alert('Server error: ' + error.message); } finally { toggleLoading(false, isYouTube); }
+    }
+    document.getElementById('form-youtube').addEventListener('submit', (e) => handleFormSubmit(e, true));
+    document.getElementById('form-pdf').addEventListener('submit', (e) => handleFormSubmit(e, false));
+
+    // --- Populate UI with YT Player Logic ---
+    function populateMix(data, videoId) {
+        const mediaContainer = document.getElementById('media-container');
+        mediaContainer.innerHTML = ''; // Clear
+
+        if (videoId) {
+            isYoutubeSource = true;
+            // Create a specific div for YouTube API to replace
+            const ytDiv = document.createElement('div');
+            ytDiv.id = 'youtube-player';
+            mediaContainer.appendChild(ytDiv);
+
+            // Initialize Player
+            if(window.YT && window.YT.Player) {
+                ytPlayer = new YT.Player('youtube-player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: { 'playsinline': 1 }
+                });
+            }
+        } else {
+             isYoutubeSource = false;
+             ytPlayer = null;
+             mediaContainer.innerHTML = `<div class="flex flex-col items-center justify-center text-white"><i class="fa-solid fa-file-pdf text-5xl mb-3"></i><p>PDF Content Analyzed</p></div>`;
+        }
+
+        // Mermaid
+        const mermaidContainer = document.getElementById('mermaid-graph');
+        mermaidContainer.innerHTML = '<div class="text-gray-400 text-sm">Generating visualization...</div>';
+        if (data.mind_map && window.renderMermaid) { window.renderMermaid(data.mind_map); } 
+        else { mermaidContainer.innerHTML = '<div class="text-gray-400 text-sm">No diagram available.</div>'; }
+
+        // Summary
+        summaryTextForAudio = data.summary.join(". "); 
+        document.getElementById('summary-list').innerHTML = data.summary.map(item => `<li class="flex items-start gap-3"><i class="fa-solid fa-check text-green-500 mt-1.5 text-xs"></i> <span>${item}</span></li>`).join('');
+
+        // Analogy
+        document.getElementById('analogy-title').innerText = data.analogy_title || "The Breakdown";
+        document.getElementById('analogy-content').innerHTML = (data.analogy_content || '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+        // Quiz
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+        data.quiz.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.className = "bg-white p-6 rounded-2xl shadow-sm border border-gray-100";
+            card.innerHTML = `<h3 class="text-lg font-bold text-gray-800 mb-4"><span class="text-blue-600 mr-2">#${idx+1}</span> ${q.question}</h3>`;
+            const optionsGrid = document.createElement('div');
+            optionsGrid.className = "space-y-3";
+            q.options.forEach((opt, optIdx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all flex justify-between items-center group";
+                btn.innerHTML = `<span class="text-gray-600 font-medium group-hover:text-gray-900">${opt}</span>`;
+                btn.onclick = () => {
+                    Array.from(optionsGrid.children).forEach(child => { child.disabled = true; child.classList.add('opacity-50'); });
+                    btn.classList.remove('opacity-50', 'hover:bg-gray-50');
+                    const isCorrect = optIdx === q.answer_index;
+                    if(isCorrect) { btn.classList.add('bg-green-50', 'border-green-500'); btn.innerHTML += `<i class="fa-solid fa-check text-green-600"></i>`; } 
+                    else { btn.classList.add('bg-red-50', 'border-red-500'); btn.innerHTML += `<i class="fa-solid fa-xmark text-red-600"></i>`; }
+                    const feedback = document.createElement('div');
+                    feedback.className = `mt-4 p-3 rounded-lg text-sm font-medium ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+                    feedback.innerHTML = `<strong>${isCorrect ? 'Correct!' : 'Incorrect.'}</strong> ${q.feedback}`;
+                    card.appendChild(feedback);
+                };
+                optionsGrid.appendChild(btn);
+            });
+            card.appendChild(optionsGrid);
+            container.appendChild(card);
+        });
+    }
+
+    // --- Audio ---
+    function speakSummary() {
+        if (!summaryTextForAudio) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(summaryTextForAudio);
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // --- 4. Export Feature ---
+    function exportNotes() {
+        if (!currentSessionId) { alert("Please generate content first."); return; }
+        // Trigger download via new route
+        window.location.href = `/export?session_id=${currentSessionId}`;
+    }
+
+    // --- Chat Logic (Mic + Timestamps) ---
+    function toggleChat() {
+        const win = document.getElementById('chat-window');
+        if (win.classList.contains('hidden')) { win.classList.remove('hidden'); setTimeout(() => win.classList.remove('scale-95', 'opacity-0'), 10); } 
+        else { win.classList.add('scale-95', 'opacity-0'); setTimeout(() => win.classList.add('hidden'), 300); }
+    }
+
+    // --- 5. Voice to Text ---
+    function startDictation() {
+        if (window.hasOwnProperty('webkitSpeechRecognition')) {
+            var recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = "en-US";
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.add('text-red-600', 'animate-pulse');
+
+            recognition.onresult = function(e) {
+                document.getElementById('chat-input').value = e.results[0][0].transcript;
+                micBtn.classList.remove('text-red-600', 'animate-pulse');
+                recognition.stop();
+            };
+            recognition.onerror = function(e) { micBtn.classList.remove('text-red-600', 'animate-pulse'); recognition.stop(); };
+            recognition.start();
+        } else {
+            alert("Speech recognition not supported in this browser.");
+        }
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const msg = input.value.trim();
+        if(!msg) return;
+        
+        const chatBox = document.getElementById('chat-messages');
+        chatBox.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-lg rounded-tr-none self-end ml-auto max-w-[85%]">${msg}</div>`;
+        input.value = '';
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ session_id: currentSessionId, message: msg })
+            });
+            const data = await res.json();
+            
+            // --- 6. PARSE TIMESTAMPS ---
+            // Replace [123] with a clickable link
+            let formattedReply = data.reply.replace(/\[(\d+)\]/g, function(match, seconds) {
+                const min = Math.floor(seconds / 60);
+                const sec = seconds % 60;
+                const timeStr = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                return `<a onclick="seekToVideo(${seconds})" class="timestamp-link" title="Jump to ${timeStr}"><i class="fa-regular fa-clock"></i> ${timeStr}</a>`;
+            });
+            
+            // Basic Bold formatting
+            formattedReply = formattedReply.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            chatBox.innerHTML += `<div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-100 self-start text-gray-700 max-w-[85%]">${formattedReply}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch(err) {
+            console.error(err);
+        }
+    });
+  </script>
+</body>
+</html>
