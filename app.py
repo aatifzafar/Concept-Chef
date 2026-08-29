@@ -3,6 +3,17 @@ import json
 import uuid
 import io
 from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
+
+# Load environment variables from local .env file
+_env_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(_env_path):
+    with open(_env_path, 'r', encoding='utf-8') as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                os.environ.setdefault(_k.strip(), _v.strip().strip('"').strip("'"))
 
 # Google Gemini
 import google.generativeai as genai
@@ -17,13 +28,14 @@ from PyPDF2 import PdfReader
 # -------------------------------------------------------------
 # Configuration
 # -------------------------------------------------------------
-# ⚠️ REPLACE WITH YOUR REAL KEY
-GENAI_API_KEY = "AIzaSyDHXw5eczuOBsnOAax7NvZoJaNrVjNp1MM"
-
-try:
-    genai.configure(api_key=GENAI_API_KEY)
-except Exception:
-    pass
+GENAI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+if GENAI_API_KEY:
+    os.environ["GEMINI_API_KEY"] = GENAI_API_KEY
+    os.environ["GOOGLE_API_KEY"] = GENAI_API_KEY
+    try:
+        genai.configure(api_key=GENAI_API_KEY)
+    except Exception:
+        pass
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -34,6 +46,7 @@ CONTENT_CACHE = {}
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # -------------------------------------------------------------
 # Helper Functions
@@ -84,25 +97,35 @@ def extract_pdf_text(filepath: str) -> str:
 # AI Logic
 # -------------------------------------------------------------
 
-def get_gemini_model(json_mode=True):
-    try:
-        # Configuration for JSON mode
-        config = {"response_mime_type": "application/json"} if json_mode else {}
-        
-        system_inst = (
-            "You are Concept-Chef. Output STRICT JSON only." if json_mode else 
-            "You are Concept-Chef, a helpful tutor. Answer questions based ONLY on the context provided."
-        )
+AVAILABLE_GEMINI_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+    "gemini-3-flash-preview",
+    "gemini-3.6-flash",
+]
 
-        # FIXED MODEL NAME: Using 'gemini-1.5-flash-001' which is the specific version ID
-        # If this still fails, run: pip install --upgrade google-generativeai
-        return genai.GenerativeModel(
-            model_name="gemini-flash-latest", 
-            generation_config=config, 
-            system_instruction=system_inst
-        )
-    except Exception:
-        return None
+def generate_gemini_content(prompt: str, json_mode: bool = True):
+    config = {"response_mime_type": "application/json"} if json_mode else {}
+    system_inst = (
+        "You are Concept-Chef. Output STRICT JSON only." if json_mode else 
+        "You are Concept-Chef, a helpful tutor. Answer questions based ONLY on the context provided."
+    )
+    last_error = None
+    for model_name in AVAILABLE_GEMINI_MODELS:
+        try:
+            model = genai.GenerativeModel(
+                model_name=model_name, 
+                generation_config=config, 
+                system_instruction=system_inst
+            )
+            resp = model.generate_content(prompt)
+            return resp
+        except Exception as err:
+            last_error = err
+            continue
+    raise last_error if last_error else RuntimeError("Gemini model initialization failed.")
+
 
 def build_prompt(raw_text: str, persona: str, q_count: int, difficulty: str) -> str:
     schema = """
@@ -179,26 +202,24 @@ def generate():
         else:
              return jsonify({"status": "error", "message": "Invalid source type."}), 400
 
-        # --- CACHE CONTEXT ---
+        # --- CALL AI ---
+        prompt = build_prompt(raw_text_full, style, q_count, difficulty)
+        resp = generate_gemini_content(prompt, json_mode=True)
+        ai_text = getattr(resp, 'text', None) or resp.candidates[0].content.parts[0].text
+        data = parse_gemini_json(ai_text)
+
+        # --- CACHE CONTEXT & GENERATED DATA ---
         session_id = str(uuid.uuid4())
         CONTENT_CACHE[session_id] = {
             "text": raw_text_full,
             "transcript_data": transcript_data, # Only exists for YouTube
+            "data": data,
             "meta": {
                 "source": source_type,
                 "video_id": video_id,
                 "style": style
             }
         }
-
-        # --- CALL AI ---
-        model = get_gemini_model(json_mode=True)
-        if not model: raise ValueError("Gemini model not initialized.")
-        
-        prompt = build_prompt(raw_text_full, style, q_count, difficulty)
-        resp = model.generate_content(prompt)
-        ai_text = getattr(resp, 'text', None) or resp.candidates[0].content.parts[0].text
-        data = parse_gemini_json(ai_text)
 
         return jsonify({
             "status": "success",
@@ -224,8 +245,6 @@ def chat():
     # Prepare Context
     # If we have transcript data with timestamps, we format it so Gemini can see the time.
     if cache.get('transcript_data'):
-        # Format: [120] This is what was said at 2 minutes.
-        # We group text slightly to save tokens if needed, but for now 1:1 mapping.
         context_str = ""
         for item in cache['transcript_data']:
             start_sec = int(item['start'])
@@ -247,9 +266,8 @@ def chat():
         instructions = "Instructions: Answer briefly based on the provided text."
 
     try:
-        model = get_gemini_model(json_mode=False)
         chat_prompt = f"{instructions}\n\nContext:\n{context_str}\n\nUser Question: {user_msg}"
-        resp = model.generate_content(chat_prompt)
+        resp = generate_gemini_content(chat_prompt, json_mode=False)
         return jsonify({"reply": resp.text})
     except Exception as e:
         return jsonify({"reply": "Sorry, I encountered an error."})
@@ -261,17 +279,46 @@ def export_notes():
         return "Session expired", 404
 
     cache = CONTENT_CACHE[session_id]
-    meta = cache['meta']
+    meta = cache.get('meta', {})
+    generated_data = cache.get('data', {})
     
-    # Generate Markdown Content
-    md_content = f"# Concept Chef Notes\n\n"
-    md_content += f"**Source:** {meta['source'].upper()}\n"
-    md_content += f"**Persona:** {meta['style']}\n"
-    if meta['video_id']:
+    # Generate Clean Structured Markdown Content
+    md_content = "# Concept Chef Study Notes\n\n"
+    source_type = meta.get('source', 'unknown').upper()
+    md_content += f"**Source:** {source_type}\n"
+    if meta.get('style'):
+        md_content += f"**Persona/Style:** {meta['style']}\n"
+    if meta.get('video_id'):
         md_content += f"**Video Link:** https://youtu.be/{meta['video_id']}\n"
     
-    md_content += "\n---\n## Full Transcript / Content\n\n"
-    md_content += cache['text']
+    # 1. Summary & Key Takeaways
+    summary = generated_data.get('summary', [])
+    if summary:
+        md_content += "\n---\n\n## 📝 Summary & Key Takeaways\n\n"
+        for idx, item in enumerate(summary, start=1):
+            md_content += f"{idx}. {item}\n\n"
+            
+    # 2. Concept Analogy
+    analogy_title = generated_data.get('analogy_title')
+    analogy_content = generated_data.get('analogy_content')
+    if analogy_title or analogy_content:
+        md_content += f"\n---\n\n## 💡 Core Concept Analogy: {analogy_title or ''}\n\n"
+        if analogy_content:
+            md_content += f"{analogy_content}\n\n"
+
+    # 3. Practice Quiz & Solutions
+    quiz = generated_data.get('quiz', [])
+    if quiz:
+        md_content += "\n---\n\n## 🎯 Practice Quiz & Solutions\n\n"
+        for idx, q in enumerate(quiz, start=1):
+            md_content += f"### Question {idx}: {q.get('question', '')}\n\n"
+            options = q.get('options', [])
+            for opt in options:
+                md_content += f"- {opt}\n"
+            md_content += f"\n**Correct Answer:** {q.get('answer', '')}\n\n"
+            if q.get('explanation'):
+                md_content += f"**Explanation:** {q.get('explanation', '')}\n\n"
+            md_content += "---\n\n"
     
     # Create file object
     mem_file = io.BytesIO()
@@ -284,6 +331,7 @@ def export_notes():
         download_name=f"concept_chef_notes_{session_id[:8]}.md",
         mimetype="text/markdown"
     )
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

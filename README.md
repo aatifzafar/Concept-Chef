@@ -1,433 +1,262 @@
-# 🧑‍🍳 Concept-Chef: Scaling Sustainability Literacy through AI
+# Concept Weaver
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+You are redesigning the FRONTEND ONLY of an existing working application called Concept Chef. 
 
-Transform YouTube videos and PDF documents into interactive study materials in seconds using Google Gemini AI.
+Before changing anything, inspect this repository thoroughly: 
 
-![Concept-Chef Demo](screenshots/demo.gif) <!-- Add your demo gif/image -->
+https://github.com/aatifzafar/AICTC-1M1B
 
----
+This is a Flask app with ONE backend file (app.py) and ONE template (templates/index.html, 
 
-## 🌿 About This Project
+currently vanilla HTML/CSS/JS + Mermaid.js). Do not assume a different architecture.
 
-**Name:** Concept-Chef: Scaling Sustainability Literacy through AI
+======================================================
 
-**College:** [Alliance University]
+STRICT PRESERVATION RULES — DO NOT BREAK THESE
 
----
+======================================================
 
-## 🎯 1. Project Description
+- Do NOT modify, remove, or rewrite backend logic in app.py.
 
-### SDG Alignment
+- Do NOT change the existing routes or their contracts:
 
-- **Primary SDG:** SDG 4 – Quality Education (Specifically Target 4.7: Ensuring all learners acquire knowledge and skills needed to promote sustainable development)
-- **Secondary SDG:** SDG 13 – Climate Action (Improving education, awareness-raising, and human capacity on climate change mitigation)
+  - GET /  → renders the main page
 
-### Problem Statement
+  - POST /generate → multipart form fields: source_type ("youtube"|"pdf"), url, file, style, q_count, difficulty
 
-**"How might we use AI to simplify complex climate science and sustainability data so that students and community leaders can build actionable knowledge more efficiently?"**
+      returns: { status, data: { summary[], analogy_title, analogy_content, mind_map (Mermaid "graph TD" string), 
 
-Currently, vital information regarding climate change and sustainable practices is locked in long, technical PDF reports (like the IPCC reports) or hour-long academic lectures. Students and community activists often struggle to digest this "passive content," leading to low retention and a lack of practical application.
+                 quiz: [{question, options[], answer_index, feedback}] }, video_id, session_id }
 
-### AI Solution Overview
+  - POST /chat → JSON body { session_id, message } → returns { reply } 
 
-Concept-Chef is an AI-powered **"Sustainability Literacy Accelerator."** It uses the Google Gemini API to ingest dense environmental content (YouTube lectures or PDF research) and instantly transforms it into structured, active learning materials. It generates:
+      (reply text may contain timestamp citations in the literal format "[120]" meaning seconds — 
 
-- **Visual Mind Maps:** Simplifies complex environmental systems (e.g., the Carbon Cycle)
-- **Adaptive Quizzes:** Tests retention of key sustainability facts
-- **Interactive Chatbot:** Answers follow-up questions with timestamp citations, ensuring users can verify facts directly from the source
+       render these as clickable/highlighted citation chips, do not alter how they're generated)
 
-### Target Users
+  - GET /export?session_id=... → downloads a Markdown file (raw extracted content, not curated notes)
 
-- **Environmental Students:** Seeking to summarize dense research papers for exams
-- **Community Educators:** Needing to simplify technical waste-management or renewable energy concepts for local awareness programs
-- **Climate Advocates:** Quickly extracting key data points from global policy documents
+- Do NOT invent new backend fields, new API routes, fake analytics, fake user accounts, fake saved 
 
-### 🛡️ Responsible AI Considerations (Mandatory)
+  history, or a fake "concepts" array. The ONLY concept-level data available is the Mermaid mind_map 
 
-To ensure this project aligns with IBM's ethics and responsibility guidelines:
+  string and the analogy_title/analogy_content pair — if you want a "concept" visual treatment, derive 
 
-- **Fairness & Inclusion:** The "Learning Personas" feature (e.g., Storyteller vs. Teacher) allows the AI to adjust the complexity of technical jargon. This ensures that sustainability education is accessible to users regardless of their prior educational level or age.
+  it from parsing/displaying the existing mind_map nodes, never fabricate new content.
 
-- **Transparency (Groundedness):** The AI chatbot is restricted to the context of the provided document/video. It uses timestamp citations to point users back to the original source, preventing "AI hallucinations" and ensuring that climate data remains scientifically accurate.
+- Do NOT add persistence/database/auth. Session state is intentionally in-memory and ephemeral — 
 
-- **Privacy:** The system uses an in-memory session cache that clears upon restart, ensuring that no personal study data or uploaded documents are stored permanently on the server.
+  design around that reality (e.g. warn before refresh loses the session) rather than pretending 
 
-### 🚀 3. Prototype Details (Architecture & Workflow)
+  otherwise.
 
-#### The AI Workflow
+- Do NOT introduce a new frontend framework/build system unless Lovable's own stack requires it — 
 
-- **Data Extraction:** The system uses youtube-transcript-api and PyPDF2 to pull raw data from sustainability sources
-- **Intelligent Processing:** The Google Gemini (gemini-flash-latest) model processes the text using a "Sustainability System Prompt" that prioritizes fact-extraction and conceptual clarity
-- **Structured Output:** The AI returns JSON data to generate the Mermaid.js mind map and the interactive quiz
+  keep the dependency footprint minimal. Keep Mermaid.js for the mind map; do not replace it with a 
 
-#### Project Structure
+  different diagramming library.
 
+- Do NOT overdesign. No purple gradients, no glassmorphism, no neon glow, no giant hero sections, 
+
+  no "make everything a rounded card" pattern, no generic AI-dashboard look, no decorative animation.
+
+======================================================
+
+PRODUCT STORY TO DESIGN AROUND
+
+======================================================
+
+Concept Chef takes one piece of educational content (YouTube video or PDF) and turns it into a 
+
+four-stage learning workspace:
+
+  UNDERSTAND (summary + analogy) → EXPLORE (mind map) → TEST (quiz) → ASK (source-grounded chat)
+
+A future fifth stage, IMPROVE → RETEST (weak-concept-driven revision), may be added later without 
+
+backend changes right now — leave clear structural room for it in the navigation, but do not build it.
+
+The interface must make the user feel: "I gave it one piece of content and it built me a complete 
+
+learning workspace" — this is a journey, not four disconnected AI features bolted together.
+
+======================================================
+
+VISUAL DIRECTION
+
+======================================================
+
+Aesthetic: editorial / research-lab notebook, not a SaaS AI dashboard. Premium, academic, quietly 
+
+confident, slightly experimental — never cutesy, never a cooking/restaurant theme despite the name.
+
+- Typography: a strong serif or high-contrast display face for headings paired with a clean, highly 
+
+  legible sans for body text. Type does the hierarchy work — don't rely on card borders and shadows 
+
+  to separate content.
+
+- Color: one deliberate accent color used sparingly (state indicators, active nav, CTAs) against a 
+
+  restrained neutral base (warm off-white or deep ink, your choice) — no rainbow gradients, no neon.
+
+- Spacing: generous, intentional whitespace; content should breathe, not sit in dense boxes.
+
+- Cards: use sparingly and only where content is genuinely discrete (a single quiz question, a single 
+
+  chat citation) — do not wrap every UI element in a rounded card with a shadow.
+
+- Motion: only for functional state transitions (stage switching, quiz answer reveal, node selection 
+
+  in the mind map) — never decorative or delay-adding animation.
+
+- Density: readable and calm, not a cramped dashboard.
+
+- Accessibility: sufficient contrast, visible focus states, keyboard-navigable stage rail and quiz.
+
+======================================================
+
+INFORMATION ARCHITECTURE
+
+======================================================
+
+Source → Learning Workspace → Understand → Explore → Test → Ask
+
+1. LANDING / SOURCE INPUT
+
+   - Above the fold: a single clear headline stating the value ("Turn a video or document into a 
+
+     complete learning workspace") and ONE primary input — a toggle between "Paste YouTube link" and 
+
+     "Upload PDF," plus persona (style) and difficulty/question-count controls, visually secondary to 
+
+     the source input itself.
+
+   - Primary CTA: "Build my learning workspace" (or similar) — not "Submit" or "Generate."
+
+   - Below or beside: a compact, honest preview of what happens next (four small labeled stages: 
+
+     Understand, Explore, Test, Ask) so the value is obvious in the first 5 seconds.
+
+2. PROCESSING STATE (while /generate is in flight)
+
+   - Show a visible, honest pipeline (e.g. "Reading source → Structuring concepts → Preparing your 
+
+     workspace") rather than a generic spinner. This should feel like real work happening, not a 
+
+     black box. Keep copy accurate to what's actually happening (transcript/PDF extraction, then 
+
+     Gemini structuring).
+
+3. LEARNING WORKSPACE SHELL
+
+   - A persistent stage rail/nav (Understand · Explore · Test · Ask, with a visually reserved-but-
+
+     disabled "Improve" slot for the future) that stays visible at all times so the user always knows 
+
+     where they are in the journey and can jump between completed stages freely.
+
+   - Always show the active source (video thumbnail/title or PDF filename) so context is never lost.
+
+   - Export action should be clearly available but not competing with the primary journey.
+
+4. UNDERSTAND
+
+   - Present summary bullets and the analogy (analogy_title + analogy_content) as a paired, 
+
+     typographically distinct reading experience — the analogy should feel like a "here's the human 
+
+     way to think about this" moment, not just another bullet block.
+
+5. EXPLORE
+
+   - The Mermaid mind_map is the centerpiece — implement real zoom/pan/reset controls around it 
+
+     (Mermaid output stays as-is; you're building better chrome around it, not replacing the diagram 
+
+     engine).
+
+   - Optionally surface node labels as a light supplementary list purely as a navigational aid into 
+
+     the diagram — never as separately generated content.
+
+6. TEST
+
+   - One question at a time, generous spacing, clear option selection, immediate right/wrong feedback 
+
+     using the backend's `feedback` field per question.
+
+   - End-of-quiz view: score + a simple pass through of per-question feedback already returned by the 
+
+     backend. Do not invent streaks, badges, or analytics not present in the data.
+
+7. ASK
+
+   - Chat interface clearly scoped to "this source" (repeat the source context visibly so groundedness 
+
+     is obvious). Render `[123]`-style citations as clickable chips (linking to that YouTube timestamp 
+
+     when video_id is present); for PDFs, style citations as a distinct but still literal marker since 
+
+     no timestamp exists — do not fabricate PDF page citations the backend doesn't return.
+
+8. EMPTY / LOADING / ERROR STATES
+
+   - Distinct, calm states for: no transcript available, PDF text extraction failure, Gemini API 
+
+     error, chat session expired (session_id not found — in-memory cache is ephemeral, this WILL 
+
+     happen on server restart, so word the message accordingly rather than as a generic bug).
+
+9. RESPONSIVE
+
+   - Mobile: stage rail collapses to a bottom tab bar or a top segmented control; mind map remains 
+
+     pannable/zoomable full-width; quiz and chat become single-column, thumb-friendly.
+
+======================================================
+
+DEMO OPTIMIZATION
+
+======================================================
+
+The whole flow must read clearly in a 2–3 minute live demo: paste a source → watch it process → see 
+
+Understand → see Explore (mind map) → take a few quiz questions → ask the chatbot one question and see 
+
+a timestamp citation land. Make each transition between stages feel like an obvious "next step," not a 
+
+menu the evaluator has to figure out.
+
+======================================================
+
+WHAT TO DO IF SOMETHING ISN'T SUPPORTED
+
+======================================================
+
+If a design idea would require a backend/data change that doesn't exist today (e.g. saved history, 
+
+per-concept mastery tracking, PDF page citations), design the UI to work beautifully within what 
+
+/generate, /chat, and /export ACTUALLY return — do not mock up functionality that doesn't exist yet.
+
+This project was built with [Lovable](https://lovable.dev).
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/46f4da39-c4ae-4582-bdd0-45ce98450cf4).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
 ```
-concept-chef/
-├── app.py                 # Main Flask application (AI Logic & RAG)
-├── templates/
-│   └── index.html        # Frontend UI (Sustainability Dashboard)
-├── uploads/              # Temporary PDF storage
-└── requirements.txt       # Dependencies (Gemini, Flask, etc.)
-```
-
-### 📈 4. Expected Impact
-
-- **Social Impact:** By reducing the time needed to summarize a 1-hour lecture into 30 seconds of "active notes," we lower the barrier to environmental education.
-
-- **Environmental Impact:** Facilitates the rapid spread of climate-saving knowledge (e.g., renewable energy benefits, circular economy practices) by making the information "sharable" and easy to understand.
-
-- **Economic Impact:** Provides a free, high-tier educational tool for students who cannot afford private tutoring or expensive premium educational platforms.
-
----
-
-## 🎯 Problem Statement (General)
-
-Students and professionals waste hours:
-- 📚 Creating study notes from long videos/documents
-- 🧠 Struggling to retain information from passive content
-- ❌ Finding no interactive tools for active learning
-
-**Concept-Chef solves this by automating the entire learning workflow.**
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🎬 **Multi-Source Input** | Support for YouTube videos & PDF uploads |
-| 🤖 **AI-Powered** | Google Gemini integration for intelligent content processing |
-| 📊 **Visual Learning** | Auto-generated mind maps using Mermaid.js |
-| 🧪 **Custom Quizzes** | Generate 1-100 questions with adjustable difficulty |
-| 💬 **Interactive Chatbot** | Context-aware Q&A with timestamp citations |
-| 📥 **Export Notes** | Download complete study materials as Markdown |
-| 🎨 **Learning Personas** | Multiple teaching styles (Teacher, Storyteller, Comedian, etc.) |
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.8 or higher
-- Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/concept-chef.git
-cd concept-chef/hackathon_project
-```
-
-2. **Create virtual environment**
-```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
-```
-
-3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Set up API key**
-
-Replace the placeholder in `app.py` line 21:
-```python
-GENAI_API_KEY = "your_actual_api_key_here"
-```
-
-**Or** set as environment variable:
-```bash
-# Windows
-set GENAI_API_KEY=your_actual_api_key_here
-# macOS/Linux
-export GENAI_API_KEY=your_actual_api_key_here
-```
-
-5. **Run the application**
-```bash
-python app.py
-```
-
-6. **Open in browser**
-```
-http://localhost:5000
-```
-
----
-
-## 📖 Usage Guide
-
-### YouTube Video Processing
-
-1. Paste any YouTube URL with available transcripts
-2. Select learning persona (Teacher, Storyteller, etc.)
-3. Choose number of quiz questions (1-100)
-4. Select difficulty level (Easy, Medium, Hard, Mix)
-5. Click "Generate" and wait 10-30 seconds
-
-### PDF Document Processing
-
-1. Click "Upload PDF" and select your file (max 16MB)
-2. Configure persona and quiz settings
-3. Click "Generate" to process
-
-### Interactive Features
-
-- **Mind Map:** Visual flowchart of key concepts
-- **Quiz:** Click options, get instant feedback with explanations
-- **Chatbot:** Ask follow-up questions about the content
-  - For YouTube videos: Get timestamp citations `[120]` = 2 minutes
-- **Export:** Download complete notes as Markdown file
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    User Interface                        │
-│          (HTML + CSS + JavaScript + Mermaid.js)         │
-└────────────────────┬────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────┐
-│                  Flask Backend                           │
-│  ┌────────────────────────────────────────────────┐     │
-│  │  Routes: /, /generate, /chat, /export          │     │
-│  └───────────┬────────────────────────────────────┘     │
-│              │                                           │
-│  ┌───────────▼────────────────────────────────────┐     │
-│  │  Content Processing Layer                      │     │
-│  │  • YouTube Transcript API                      │     │
-│  │  • PyPDF2 Text Extraction                      │     │
-│  │  • Session Management (In-Memory Cache)        │     │
-│  └───────────┬────────────────────────────────────┘     │
-│              │                                           │
-│  ┌───────────▼────────────────────────────────────┐     │
-│  │         Google Gemini AI                       │     │
-│  │  • JSON Mode (Structured Output)               │     │
-│  │  • System Instructions                         │     │
-│  │  • gemini-flash-latest Model                   │     │
-│  └────────────────────────────────────────────────┘     │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Python 3.8+** - Core language
-- **Flask 3.0+** - Web framework
-- **Google Generative AI** - AI model integration
-- **youtube-transcript-api** - Video transcript extraction
-- **PyPDF2** - PDF text parsing
-
-### Frontend
-- **HTML5/CSS3** - Structure & styling
-- **JavaScript (Vanilla)** - Interactive functionality
-- **Mermaid.js** - Mind map visualization
-
-### AI Model
-- **Google Gemini (gemini-flash-latest)** - Fast, accurate, free-tier friendly
-
----
-
-## 📁 Project Structure
-
-```
-concept-chef/
-├── hackathon_project/
-│   ├── app.py                 # Main Flask application
-│   ├── requirements.txt       # Python dependencies
-│   ├── templates/
-│   │   └── index.html        # Frontend UI
-│   ├── uploads/              # Temporary PDF storage
-│   └── README.md             # This file
-├── .venv/                    # Virtual environment (gitignored)
-└── screenshots/              # Demo images
-```
-
----
-
-## 🔧 Configuration
-
-### API Limits
-- **Max PDF Size:** 16MB
-- **Quiz Questions:** 1-100
-- **Text Processing:** First 25,000 characters (to prevent token overflow)
-- **Session Storage:** In-memory (cleared on restart)
-
-### Supported Languages
-- YouTube transcripts: English (en, en-US, en-GB, en-CA, en-IN), Hindi (hi)
-- Fallback handling for missing transcripts
-
----
-
-## 🧪 Testing
-
-### Manual Testing Checklist
-- [ ] YouTube video with English transcript
-- [ ] YouTube video with no transcript (should fail gracefully)
-- [ ] PDF upload (small file < 1MB)
-- [ ] PDF upload (large file > 10MB)
-- [ ] Quiz generation (1, 10, 50, 100 questions)
-- [ ] Chatbot interaction (3-5 follow-up questions)
-- [ ] Export functionality
-- [ ] Invalid YouTube URL handling
-- [ ] Corrupted PDF handling
-
-### Sample Test URLs
-```
-# Working YouTube videos with transcripts:
-https://www.youtube.com/watch?v=dQw4w9WgXcQ
-https://youtu.be/jNQXAC9IVRw
-
-# Test PDFs: Use any research paper or textbook chapter
-```
-
----
-
-## 🚧 Known Limitations
-
-1. **Transcript Dependency:** YouTube videos must have available transcripts
-2. **Language Support:** Currently optimized for English content
-3. **Session Persistence:** In-memory cache clears on server restart
-4. **API Rate Limits:** Gemini free tier has request limits (60/min)
-5. **Large Files:** Processing very large PDFs (>10MB) may be slow
-
----
-
-## 🔮 Future Enhancements
-
-### Phase 1 (Short-term)
-- [ ] Add audio transcription using Whisper API (for videos without transcripts)
-- [ ] Multi-language support (Spanish, French, German, etc.)
-- [ ] Dark mode toggle
-- [ ] Progress bar for AI processing
-
-### Phase 2 (Medium-term)
-- [ ] User authentication & saved sessions
-- [ ] PostgreSQL/MongoDB for persistent storage
-- [ ] Redis caching for faster retrieval
-- [ ] Export to PDF/DOCX formats
-- [ ] Mobile responsive design improvements
-
-### Phase 3 (Long-term)
-- [ ] Mobile app (React Native)
-- [ ] Collaborative study rooms
-- [ ] Learning analytics dashboard
-- [ ] Spaced repetition flashcards
-- [ ] Integration with LMS platforms (Moodle, Canvas)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Contribution Guidelines
-- Follow PEP 8 style guide for Python code
-- Add comments for complex logic
-- Test thoroughly before submitting PR
-- Update documentation if adding new features
-
----
-
-## 📊 Performance Metrics
-
-| Metric | Value |
-|--------|-------|
-| Average Response Time | < 30 seconds |
-| Max Concurrent Users | 50+ (in-memory) |
-| Question Generation Speed | ~2 seconds per question |
-| Mind Map Generation | < 5 seconds |
-| PDF Processing Speed | ~1 second per page |
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue:** `Failed to fetch transcript: 'FetchedTranscriptSnippet' object is not subscriptable`
-```bash
-# Solution: Update youtube-transcript-api
-pip install --upgrade youtube-transcript-api
-```
-
-**Issue:** `Gemini API not initialized`
-```bash
-# Solution: Check API key is set correctly
-# Verify at: https://makersuite.google.com/app/apikey
-```
-
-**Issue:** `404 Error in Browser Console`
-```bash
-# Solution: Favicon route already added (line 315 in app.py)
-# Safe to ignore if functionality works
-```
-
-**Issue:** Server won't start on port 5000
-```bash
-# Solution: Port already in use, change in app.py:
-app.run(host='0.0.0.0', port=5001, debug=True)
-```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
-
----
-
-## 🙏 Acknowledgments
-
-- [Google Gemini](https://ai.google.dev/) for the powerful AI model
-- [Mermaid.js](https://mermaid.js.org/) for diagram generation
-- [Flask](https://flask.palletsprojects.com/) for the web framework
-- [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) for transcript extraction
-
----
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-1. Check the [Troubleshooting](#-troubleshooting) section
-2. Open an [Issue](https://github.com/yourusername/concept-chef/issues)
-3. Contact via email (response within 24 hours)
-
----
-
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/concept-chef&type=Date)](https://star-history.com/#yourusername/concept-chef&Date)
-
----
-
-**Made with ❤️ for learners everywhere**

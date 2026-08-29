@@ -1,4 +1,6 @@
 flask
+flask-cors
+python-dotenv
 google-generativeai
 youtube_transcript_api
 pypdf2

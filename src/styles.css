@@ -1,0 +1,251 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Concept Chef design system — editorial / research-lab notebook.
+ * Warm paper base, deep ink text, one accent (burnt sienna).
+ * All colors in oklch. Never hardcode colors in components.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --font-display: var(--font-serif-display);
+  --font-sans: var(--font-body-sans);
+  --font-mono: var(--font-body-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-border: var(--border);
+  --color-rule: var(--rule);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+--radius: 0.25rem;
+  /* Display typography: Fraunces variable serif (fixed weight 600 at rest) for
+     headlines, Space Mono for utility labels, IBM Plex Sans for body. */
+  --font-serif-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --display-weight: 600;
+  --display-variation: "opsz" 96, "SOFT" 0, "WONK" 1;
+  --display-tracking: -0.02em;
+  --font-body-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body-mono: "Space Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  --background: oklch(0.972 0.008 85);
+  --paper: oklch(0.988 0.005 85);
+  --foreground: oklch(0.23 0.015 60);
+  --card: oklch(0.988 0.005 85);
+  --card-foreground: oklch(0.23 0.015 60);
+  --popover: oklch(0.988 0.005 85);
+  --popover-foreground: oklch(0.23 0.015 60);
+
+  --primary: oklch(0.26 0.018 60);
+  --primary-foreground: oklch(0.985 0.005 85);
+  --secondary: oklch(0.945 0.01 85);
+  --secondary-foreground: oklch(0.3 0.015 60);
+  --muted: oklch(0.945 0.01 85);
+  --muted-foreground: oklch(0.52 0.015 65);
+
+  --accent: oklch(0.53 0.148 42);
+  --accent-foreground: oklch(0.985 0.005 85);
+  --accent-soft: oklch(0.94 0.032 55);
+
+  --success: oklch(0.47 0.09 155);
+  --success-soft: oklch(0.94 0.035 155);
+  --destructive: oklch(0.5 0.17 27);
+  --destructive-foreground: oklch(0.985 0.005 85);
+  --destructive-soft: oklch(0.94 0.04 27);
+
+  --border: oklch(0.895 0.012 80);
+  --rule: oklch(0.85 0.015 75);
+  --input: oklch(0.885 0.012 80);
+  --ring: oklch(0.53 0.148 42);
+
+  --sidebar: oklch(0.96 0.01 85);
+  --sidebar-foreground: oklch(0.23 0.015 60);
+  --sidebar-primary: oklch(0.53 0.148 42);
+  --sidebar-primary-foreground: oklch(0.985 0.005 85);
+  --sidebar-accent: oklch(0.93 0.012 80);
+  --sidebar-accent-foreground: oklch(0.26 0.018 60);
+  --sidebar-border: oklch(0.885 0.012 80);
+  --sidebar-ring: oklch(0.53 0.148 42);
+}
+
+.dark {
+  --background: oklch(0.19 0.012 70);
+  --paper: oklch(0.23 0.014 70);
+  --foreground: oklch(0.945 0.008 85);
+  --card: oklch(0.23 0.014 70);
+  --card-foreground: oklch(0.945 0.008 85);
+  --popover: oklch(0.23 0.014 70);
+  --popover-foreground: oklch(0.945 0.008 85);
+  --primary: oklch(0.93 0.01 85);
+  --primary-foreground: oklch(0.21 0.014 70);
+  --secondary: oklch(0.27 0.014 70);
+  --secondary-foreground: oklch(0.93 0.01 85);
+  --muted: oklch(0.27 0.014 70);
+  --muted-foreground: oklch(0.71 0.015 75);
+  --accent: oklch(0.66 0.14 45);
+  --accent-foreground: oklch(0.19 0.012 70);
+  --accent-soft: oklch(0.3 0.05 45);
+  --success: oklch(0.7 0.11 155);
+  --success-soft: oklch(0.28 0.05 155);
+  --destructive: oklch(0.65 0.17 27);
+  --destructive-foreground: oklch(0.19 0.012 70);
+  --destructive-soft: oklch(0.29 0.06 27);
+  --border: oklch(1 0 0 / 12%);
+  --rule: oklch(1 0 0 / 18%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.66 0.14 45);
+  --sidebar: oklch(0.21 0.013 70);
+  --sidebar-foreground: oklch(0.945 0.008 85);
+  --sidebar-primary: oklch(0.66 0.14 45);
+  --sidebar-primary-foreground: oklch(0.19 0.012 70);
+  --sidebar-accent: oklch(0.27 0.014 70);
+  --sidebar-accent-foreground: oklch(0.945 0.008 85);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.66 0.14 45);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif-display);
+    font-weight: var(--display-weight);
+    font-variation-settings: var(--display-variation);
+    letter-spacing: var(--display-tracking);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
+}
+
+@utility label-eyebrow {
+  font-family: var(--font-body-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* Structural / utility text: numbers, field labels, section markers. */
+@utility label-util {
+  font-family: var(--font-body-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility rule-top {
+  border-top: 1px solid var(--color-rule);
+}
+
+/* Barely-there paper grain over the whole surface. */
+@utility paper-grain {
+  position: relative;
+}
+@utility paper-grain-layer {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility stage-enter {
+  animation: stage-in 220ms ease-out both;
+}
+
+/* Underline that draws itself left-to-right on focus/hover. */
+@utility draw-rule {
+  position: relative;
+}
+@utility draw-rule-line {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  transform-origin: left;
+  transform: scaleX(0);
+  background-color: var(--color-accent);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* Display typography is locked to Fraunces (variable serif) with Space Mono
+   utility labels and IBM Plex Sans body — see :root above. */
