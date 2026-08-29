@@ -1,262 +1,196 @@
-# Concept Weaver
-
-You are redesigning the FRONTEND ONLY of an existing working application called Concept Chef. 
-
-Before changing anything, inspect this repository thoroughly: 
-
-https://github.com/aatifzafar/AICTC-1M1B
-
-This is a Flask app with ONE backend file (app.py) and ONE template (templates/index.html, 
-
-currently vanilla HTML/CSS/JS + Mermaid.js). Do not assume a different architecture.
-
-======================================================
-
-STRICT PRESERVATION RULES — DO NOT BREAK THESE
-
-======================================================
-
-- Do NOT modify, remove, or rewrite backend logic in app.py.
-
-- Do NOT change the existing routes or their contracts:
-
-  - GET /  → renders the main page
-
-  - POST /generate → multipart form fields: source_type ("youtube"|"pdf"), url, file, style, q_count, difficulty
-
-      returns: { status, data: { summary[], analogy_title, analogy_content, mind_map (Mermaid "graph TD" string), 
-
-                 quiz: [{question, options[], answer_index, feedback}] }, video_id, session_id }
-
-  - POST /chat → JSON body { session_id, message } → returns { reply } 
-
-      (reply text may contain timestamp citations in the literal format "[120]" meaning seconds — 
-
-       render these as clickable/highlighted citation chips, do not alter how they're generated)
-
-  - GET /export?session_id=... → downloads a Markdown file (raw extracted content, not curated notes)
-
-- Do NOT invent new backend fields, new API routes, fake analytics, fake user accounts, fake saved 
-
-  history, or a fake "concepts" array. The ONLY concept-level data available is the Mermaid mind_map 
-
-  string and the analogy_title/analogy_content pair — if you want a "concept" visual treatment, derive 
-
-  it from parsing/displaying the existing mind_map nodes, never fabricate new content.
-
-- Do NOT add persistence/database/auth. Session state is intentionally in-memory and ephemeral — 
-
-  design around that reality (e.g. warn before refresh loses the session) rather than pretending 
-
-  otherwise.
-
-- Do NOT introduce a new frontend framework/build system unless Lovable's own stack requires it — 
-
-  keep the dependency footprint minimal. Keep Mermaid.js for the mind map; do not replace it with a 
-
-  different diagramming library.
-
-- Do NOT overdesign. No purple gradients, no glassmorphism, no neon glow, no giant hero sections, 
-
-  no "make everything a rounded card" pattern, no generic AI-dashboard look, no decorative animation.
-
-======================================================
-
-PRODUCT STORY TO DESIGN AROUND
-
-======================================================
-
-Concept Chef takes one piece of educational content (YouTube video or PDF) and turns it into a 
-
-four-stage learning workspace:
-
-  UNDERSTAND (summary + analogy) → EXPLORE (mind map) → TEST (quiz) → ASK (source-grounded chat)
-
-A future fifth stage, IMPROVE → RETEST (weak-concept-driven revision), may be added later without 
-
-backend changes right now — leave clear structural room for it in the navigation, but do not build it.
-
-The interface must make the user feel: "I gave it one piece of content and it built me a complete 
-
-learning workspace" — this is a journey, not four disconnected AI features bolted together.
-
-======================================================
-
-VISUAL DIRECTION
-
-======================================================
-
-Aesthetic: editorial / research-lab notebook, not a SaaS AI dashboard. Premium, academic, quietly 
-
-confident, slightly experimental — never cutesy, never a cooking/restaurant theme despite the name.
-
-- Typography: a strong serif or high-contrast display face for headings paired with a clean, highly 
-
-  legible sans for body text. Type does the hierarchy work — don't rely on card borders and shadows 
-
-  to separate content.
-
-- Color: one deliberate accent color used sparingly (state indicators, active nav, CTAs) against a 
-
-  restrained neutral base (warm off-white or deep ink, your choice) — no rainbow gradients, no neon.
-
-- Spacing: generous, intentional whitespace; content should breathe, not sit in dense boxes.
-
-- Cards: use sparingly and only where content is genuinely discrete (a single quiz question, a single 
-
-  chat citation) — do not wrap every UI element in a rounded card with a shadow.
-
-- Motion: only for functional state transitions (stage switching, quiz answer reveal, node selection 
-
-  in the mind map) — never decorative or delay-adding animation.
-
-- Density: readable and calm, not a cramped dashboard.
-
-- Accessibility: sufficient contrast, visible focus states, keyboard-navigable stage rail and quiz.
-
-======================================================
-
-INFORMATION ARCHITECTURE
-
-======================================================
-
-Source → Learning Workspace → Understand → Explore → Test → Ask
-
-1. LANDING / SOURCE INPUT
-
-   - Above the fold: a single clear headline stating the value ("Turn a video or document into a 
-
-     complete learning workspace") and ONE primary input — a toggle between "Paste YouTube link" and 
-
-     "Upload PDF," plus persona (style) and difficulty/question-count controls, visually secondary to 
-
-     the source input itself.
-
-   - Primary CTA: "Build my learning workspace" (or similar) — not "Submit" or "Generate."
-
-   - Below or beside: a compact, honest preview of what happens next (four small labeled stages: 
-
-     Understand, Explore, Test, Ask) so the value is obvious in the first 5 seconds.
-
-2. PROCESSING STATE (while /generate is in flight)
-
-   - Show a visible, honest pipeline (e.g. "Reading source → Structuring concepts → Preparing your 
-
-     workspace") rather than a generic spinner. This should feel like real work happening, not a 
-
-     black box. Keep copy accurate to what's actually happening (transcript/PDF extraction, then 
-
-     Gemini structuring).
-
-3. LEARNING WORKSPACE SHELL
-
-   - A persistent stage rail/nav (Understand · Explore · Test · Ask, with a visually reserved-but-
-
-     disabled "Improve" slot for the future) that stays visible at all times so the user always knows 
-
-     where they are in the journey and can jump between completed stages freely.
-
-   - Always show the active source (video thumbnail/title or PDF filename) so context is never lost.
-
-   - Export action should be clearly available but not competing with the primary journey.
-
-4. UNDERSTAND
-
-   - Present summary bullets and the analogy (analogy_title + analogy_content) as a paired, 
-
-     typographically distinct reading experience — the analogy should feel like a "here's the human 
-
-     way to think about this" moment, not just another bullet block.
-
-5. EXPLORE
-
-   - The Mermaid mind_map is the centerpiece — implement real zoom/pan/reset controls around it 
-
-     (Mermaid output stays as-is; you're building better chrome around it, not replacing the diagram 
-
-     engine).
-
-   - Optionally surface node labels as a light supplementary list purely as a navigational aid into 
-
-     the diagram — never as separately generated content.
-
-6. TEST
-
-   - One question at a time, generous spacing, clear option selection, immediate right/wrong feedback 
-
-     using the backend's `feedback` field per question.
-
-   - End-of-quiz view: score + a simple pass through of per-question feedback already returned by the 
-
-     backend. Do not invent streaks, badges, or analytics not present in the data.
-
-7. ASK
-
-   - Chat interface clearly scoped to "this source" (repeat the source context visibly so groundedness 
-
-     is obvious). Render `[123]`-style citations as clickable chips (linking to that YouTube timestamp 
-
-     when video_id is present); for PDFs, style citations as a distinct but still literal marker since 
-
-     no timestamp exists — do not fabricate PDF page citations the backend doesn't return.
-
-8. EMPTY / LOADING / ERROR STATES
-
-   - Distinct, calm states for: no transcript available, PDF text extraction failure, Gemini API 
-
-     error, chat session expired (session_id not found — in-memory cache is ephemeral, this WILL 
-
-     happen on server restart, so word the message accordingly rather than as a generic bug).
-
-9. RESPONSIVE
-
-   - Mobile: stage rail collapses to a bottom tab bar or a top segmented control; mind map remains 
-
-     pannable/zoomable full-width; quiz and chat become single-column, thumb-friendly.
-
-======================================================
-
-DEMO OPTIMIZATION
-
-======================================================
-
-The whole flow must read clearly in a 2–3 minute live demo: paste a source → watch it process → see 
-
-Understand → see Explore (mind map) → take a few quiz questions → ask the chatbot one question and see 
-
-a timestamp citation land. Make each transition between stages feel like an obvious "next step," not a 
-
-menu the evaluator has to figure out.
-
-======================================================
-
-WHAT TO DO IF SOMETHING ISN'T SUPPORTED
-
-======================================================
-
-If a design idea would require a backend/data change that doesn't exist today (e.g. saved history, 
-
-per-concept mastery tracking, PDF page citations), design the UI to work beautifully within what 
-
-/generate, /chat, and /export ACTUALLY return — do not mock up functionality that doesn't exist yet.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/46f4da39-c4ae-4582-bdd0-45ce98450cf4).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+# 🍳 Concept Chef
+
+**Concept Chef** is an AI-powered learning workspace that transforms long educational content—such as YouTube videos and PDF documents—into an interactive, multi-stage study guide. By extracting transcripts and document text, Concept Chef leverages Google Gemini to synthesize structured summaries, intuitive analogies, interactive visual mind maps, practice quizzes, and a source-grounded chatbot with video timestamp citations.
+
+---
+
+## ✨ Key Features
+
+- **Multi-Source Ingestion**:
+  - **YouTube Videos**: Automatically extracts video transcripts with millisecond-accurate timestamps across multiple languages.
+  - **PDF Documents**: Parses and extracts text from uploaded multi-page PDF documents.
+- **Customizable Learning Parameters**:
+  - **Persona / Explanation Style**: Customize explanations for your preferred learning style (e.g., Simple/Beginner, 5-Year-Old, Academic, Software Engineer).
+  - **Quiz Configuration**: Customize question counts (1–100) and difficulty levels (*Easy*, *Medium*, *Hard*, *Mix*).
+- **Four-Stage Learning Workspace**:
+  1. 📖 **Understand**: Clean bullet-point summaries and creative metaphorical analogies that demystify complex concepts.
+  2. 🗺️ **Explore**: Dynamic, interactive visual mind maps powered by Mermaid.js to visualize hierarchies and relationships.
+  3. 🎯 **Test**: Practice quizzes featuring multiple-choice options, instant validation, answer keys, and detailed explanations.
+  4. 💬 **Ask**: An interactive AI tutor grounded strictly in the source material. For YouTube videos, responses include clickable **timestamp citations** (`[seconds]`) to jump straight to the source context.
+- **Markdown Export**: One-click download of your generated study notes, summaries, analogies, and quizzes as a structured `.md` file.
+
+---
+
+## 🛠️ How It Works
+
+```mermaid
+flowchart LR
+    A[YouTube URL / PDF Upload] --> B[Flask Backend API]
+    B --> C[Extract Transcript / PDF Text]
+    C --> D[Google Gemini 2.5 / Flash]
+    D --> E[Structured JSON Generation]
+    E --> F[React + Vite Interactive Workspace]
+    F --> G1[📖 Understand]
+    F --> G2[🗺️ Explore Mind Map]
+    F --> G3[🎯 Practice Quiz]
+    F --> G4[💬 Grounded Chatbot]
 ```
+
+1. **Extraction**: The Flask backend extracts the full transcript from a YouTube URL via `youtube-transcript-api` or extracts text from an uploaded PDF via `PyPDF2`.
+2. **Generation**: The text is processed by Google Gemini using structured prompt engineering to generate JSON output containing summaries, analogies, Mermaid flowchart code, and quizzes.
+3. **Interactive UI**: The React frontend displays the content in a responsive 4-stage rail, allowing students to learn, visualize, self-test, and ask questions interactively.
+
+---
+
+## 💻 Tech Stack
+
+### Frontend
+- **Framework**: [React 19](https://react.dev/) with [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **UI & Icons**: [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/)
+- **Diagrams**: [Mermaid.js](https://mermaid.js.org/)
+- **Animations**: [Motion (Framer Motion)](https://motion.dev/)
+
+### Backend
+- **Framework**: [Flask](https://flask.palletsprojects.com/) & [Flask-CORS](https://flask-cors.readthedocs.io/)
+- **AI Model**: [Google Generative AI SDK](https://ai.google.dev/) (`gemini-2.5-flash` / `gemini-flash-lite-latest`)
+- **Parsers**: `youtube-transcript-api`, `PyPDF2`
+- **Environment Management**: `python-dotenv`
+- **WSGI / Production Server**: `gunicorn`
+
+---
+
+## 📁 Project Structure
+
+```text
+├── app.py                  # Flask backend server & API routes (/generate, /chat, /export)
+├── requirements.txt        # Python backend dependencies
+├── .env.example            # Environment variable template
+├── package.json            # Frontend dependencies and scripts
+├── vite.config.ts          # Vite build configuration
+├── tsconfig.json           # TypeScript configuration
+├── uploads/                # Temporary local storage for uploaded PDF files
+├── templates/              # HTML fallback template
+├── public/                 # Static assets
+└── src/                    # Frontend application source code
+    ├── components/         # Workspace UI components
+    │   ├── SourceForm.tsx  # Input form for YouTube URL and PDF upload
+    │   ├── StageRail.tsx   # Navigation rail for workspace stages
+    │   ├── Understand.tsx  # Summary & analogy display
+    │   ├── Explore.tsx     # Interactive Mermaid mind map renderer
+    │   ├── Test.tsx        # Interactive quiz runner & scorekeeper
+    │   ├── Ask.tsx         # AI tutor chat with timestamp chips
+    │   └── ui/             # Reusable UI primitives
+    ├── routes/             # TanStack / Application routes
+    ├── styles.css          # Global styling & Tailwind CSS directives
+    └── router.tsx          # Router configuration
+```
+
+---
+
+## ⚙️ Getting Started
+
+> **Important Note**: The **Flask backend** and **React frontend** run as two separate development services that communicate over HTTP/CORS. You will need two terminal windows open.
+
+### Prerequisites
+- **Node.js** (v18.0.0 or higher) & `npm` / `bun`
+- **Python** (v3.9 or higher) & `pip`
+- A **Google Gemini API Key** (get one free at [Google AI Studio](https://aistudio.google.com/))
+
+---
+
+### 1. Backend Setup
+
+1. Open a terminal and navigate to the project directory:
+   ```bash
+   cd AICTC-1M1B
+   ```
+
+2. Create and activate a Python virtual environment (recommended):
+   - **Windows (PowerShell)**:
+     ```powershell
+     python -m venv venv
+     .\venv\Scripts\Activate.ps1
+     ```
+   - **macOS / Linux**:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+
+3. Install backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Configure environment variables:
+   - Create a `.env` file in the root directory (or copy `.env.example`):
+     ```bash
+     cp .env.example .env
+     ```
+   - Add your Gemini API key to `.env`:
+     ```env
+     GEMINI_API_KEY=your_actual_gemini_api_key_here
+     ```
+
+5. Start the Flask backend server:
+   ```bash
+   python app.py
+   ```
+   The Flask server will start on **`http://localhost:5000`**.
+
+---
+
+### 2. Frontend Setup
+
+1. Open a **second terminal** and navigate to the project root:
+   ```bash
+   cd AICTC-1M1B
+   ```
+
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+   The frontend will be available at **`http://localhost:5173`** (or the port shown in your terminal).
+
+---
+
+## 🚀 Basic Usage
+
+1. Open your browser and go to `http://localhost:5173`.
+2. **Choose Source**:
+   - Select **YouTube Video** and paste any educational video URL (ensure captions/subtitles are enabled on the video).
+   - *OR* select **PDF Document** and upload a PDF lecture note, paper, or textbook chapter.
+3. **Configure Settings**:
+   - Choose an explanation style / persona.
+   - Set the number of quiz questions and difficulty level.
+4. **Generate Workspace**: Click **Cook Concept** to analyze and build your learning space.
+5. **Explore Stages**:
+   - Review the **Summary & Analogy** in the **Understand** stage.
+   - Navigate the visual flowchart in the **Explore** stage.
+   - Test your understanding in the **Test** stage and check your score.
+   - Ask clarifying questions in the **Ask** stage and jump to video timestamps.
+6. **Export Notes**: Click **Export Notes** in the top navigation to download your notes in Markdown format.
+
+---
+
+## 🔒 API Reference
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/generate` | `POST` | Accepts `source_type` (`youtube` / `pdf`), `url` or `file`, `style`, `q_count`, and `difficulty`. Returns parsed study materials and `session_id`. |
+| `/chat` | `POST` | Accepts JSON `{ "session_id": "...", "message": "..." }`. Returns contextual reply from AI tutor with timestamp citations. |
+| `/export` | `GET` | Accepts query param `?session_id=...`. Downloads the session notes as a `.md` Markdown file. |
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
